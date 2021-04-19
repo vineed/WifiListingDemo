@@ -18,6 +18,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var activityMainBinding: ActivityMainBinding
     private lateinit var wifiManager: WifiManager;
 
+    private var wifiItemList = mutableListOf<WifiItem>()
+    private lateinit var adapter: WifiItemAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -37,6 +40,10 @@ class MainActivity : AppCompatActivity() {
     private fun setUpManagers() {
         wifiManager =
             applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        adapter = WifiItemAdapter(
+            wifiItemList,
+            this
+        )
     }
 
     private fun setUpPermissions() {
@@ -50,10 +57,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUpWifiAdapter() {
         activityMainBinding.rvWifiList.let { mRvWifiList ->
             mRvWifiList.layoutManager = LinearLayoutManager(this)
-            mRvWifiList.adapter = WifiItemAdapter(
-                mutableListOf(WifiItem(1, "Testing"), WifiItem(2, "Testing2")),
-                this
-            )
+            mRvWifiList.adapter = adapter
         }
     }
 
@@ -68,8 +72,18 @@ class MainActivity : AppCompatActivity() {
             for (result in scanResults) {
                 Toast.makeText(this, "Scan $result", Toast.LENGTH_SHORT).show()
                 println("Device is $result")
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    wifiItemList.add(
+                        WifiItem(
+                            result.SSID,
+                            "${result.BSSID} : ${result.capabilities} : ${result.frequency} : " +
+                                    "${result.venueName} : ${result.operatorFriendlyName} "
+                        )
+                    )
+                }
             }
 
+            adapter.notifyDataSetChanged()
             false
         }
     }
